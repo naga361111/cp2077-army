@@ -1,0 +1,34 @@
+# 플레이어 군대 조직
+# 스키마: tools\redmod\tweaks\base\gameplay\static_data\database\attitude\schema.tweak
+# 관계는 런타임에 AttitudeSystem.SetAttitudeGroupRelationPersistent 로 변경
+
+# --- AI 관계 (누가 누구를 공격하는가) ---
+Attitudes.Group_Army:
+  $type: AttitudeGroup
+  name: army
+  defaultAttitude: Neutral   # 스키마 기본값은 Friendly → 타 조직과 "무관계"로 명시
+  attitudeToSelf: Friendly
+
+Attitudes.Attitude_Army_Player:
+  $type: Attitude
+  group1: Attitudes.Group_Army
+  group2: Attitudes.Group_Player
+  value: Friendly
+
+# --- 소속 (스캐너 표시: NPCPuppet.script 가 레코드의 Affiliation().LocalizedName() 을 읽음) ---
+Factions.Army:
+  $base: Factions.UnaffiliatedCorpo   # 병사 베이스 레코드의 원래 소속 → animWrappers(애니메이션 세트) 유지
+  enumName: Army
+  localizedName: LocKey#Army-Faction-Name   # scripts/army/Localization.reds
+
+# --- 군대 병사 레코드 ---
+# 베이스: 시민 외형 + 권총 + 전투 AI(ArchetypeData.GenericRangedT1). gameplay\factions\security.tweak
+Character.army_soldier:
+  $base: Character.civilianguard_service_worker_ranged1_ma
+  affiliation: Factions.Army
+  baseAttitudeGroup: army
+  # reactionPreset 은 베이스의 ReactionPresets.Ganger_Aggressive 유지:
+  # - Civilian 그룹이 아니므로 m_isCivilian=false → 공포/도주 없음
+  # - isAggressive=true 필요: Neutral 대상에게 TryChangingAttitudeToHostile 이 IsAggressive() 일 때만 적대 전환 (aiActionHelper.script)
+  # - NoReaction 은 피격(CombatHit/Bullet) 반응 규칙이 없어 맞아도 무반응
+  displayName: LocKey#Army-Soldier-Name
